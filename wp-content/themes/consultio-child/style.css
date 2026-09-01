@@ -20,7 +20,7 @@ Use it to make something cool, have fun, and share what you've learned with othe
    cannot visually interfere with the main Legacy X Firm site.
    ========================================================== */
 
-#legacyx-client-portal {
+html body #legacyx-client-portal {
     --lx-ink: #151515;
     --lx-muted: #6f747c;
     --lx-line: #e8e9ec;
@@ -30,11 +30,21 @@ Use it to make something cool, have fun, and share what you've learned with othe
     --lx-orange-2: #ff8a22;
     --lx-dark: #17191d;
     --lx-shadow: 0 18px 55px rgba(20, 24, 31, .10);
+    display: block !important;
+    position: relative !important;
+    float: none !important;
+    clear: both !important;
+    left: 50% !important;
+    right: auto !important;
+    width: 100vw !important;
+    max-width: none !important;
+    min-height: 760px;
+    margin: 0 0 0 -50vw !important;
+    padding: 0 !important;
+    overflow: hidden;
     background: #f5f6f8;
     color: var(--lx-ink);
-    min-height: 760px;
     font-family: inherit;
-    overflow: hidden;
 }
 
 #legacyx-client-portal *,
@@ -45,6 +55,10 @@ Use it to make something cool, have fun, and share what you've learned with othe
 
 #legacyx-client-portal .legacyx-portal-hero {
     position: relative;
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 70px 28px 100px;
     background:
         radial-gradient(circle at 85% 0%, rgba(240, 90, 25, .16), transparent 30%),
@@ -52,8 +66,12 @@ Use it to make something cool, have fun, and share what you've learned with othe
 }
 
 #legacyx-client-portal .legacyx-portal-shell {
-    width: min(1240px, 100%);
-    margin: 0 auto;
+    display: block;
+    width: 100%;
+    max-width: 1240px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 0;
 }
 
 #legacyx-client-portal .legacyx-portal-brand {
@@ -182,6 +200,7 @@ Use it to make something cool, have fun, and share what you've learned with othe
 
 /* DASHBOARD */
 #legacyx-client-portal .legacyx-dashboard-wrap {
+    width: 100%;
     overflow: hidden;
     background: var(--lx-panel);
     border: 1px solid rgba(20, 24, 31, .06);
@@ -339,6 +358,11 @@ Use it to make something cool, have fun, and share what you've learned with othe
 }
 
 @media (max-width: 680px) {
+    html body #legacyx-client-portal {
+        left: 50% !important;
+        width: 100vw !important;
+        margin-left: -50vw !important;
+    }
     #legacyx-client-portal .legacyx-portal-hero { padding: 48px 16px 70px; }
     #legacyx-client-portal .legacyx-portal-brand { margin-bottom: 28px; }
     #legacyx-client-portal .legacyx-login-card { padding: 28px 22px; border-radius: 17px; }
