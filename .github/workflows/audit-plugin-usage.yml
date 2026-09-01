@@ -1,0 +1,36 @@
+name: Audit Plugin Usage
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/audit-plugin-usage.yml"
+
+jobs:
+  usage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Check plugin usage in WordPress data
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "${{ secrets.HESTIA_PORT }}" -o BatchMode=yes \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}'; \
+             echo '=== WIDGETS ==='; wp option get sidebars_widgets --format=json 2>/dev/null | grep -Eio 'meks[^\" ]*|instagram[^\" ]*|crypto[^\" ]*|optin[^\" ]*' | sort -u || true; \
+             echo '=== QUESTIONABLE PLUGIN DETAILS ==='; \
+             for p in duplicate-page massive-cryptocurrency-widgets meks-simple-flickr-widget optinmonster instagram-feed backup updraftplus wpforms contact-form-7 yith-woocommerce-quick-view yith-woocommerce-wishlist imunify-security wordfence; do wp plugin get \"$p\" --fields=name,title,status,version --format=csv 2>/dev/null | tail -n 1 || true; done"
+
+      - name: Check live frontend plugin assets
+        run: |
+          for url in https://legacyxfirm.us/ https://legacyxfirm.us/client-portal/ https://legacyxfirm.us/contact/; do
+            echo "=== $url ==="
+            curl -Lks --max-time 20 "$url" | grep -Eo '/wp-content/plugins/[A-Za-z0-9._-]+' | sed 's#^/wp-content/plugins/##' | sort -u || true
+          done
