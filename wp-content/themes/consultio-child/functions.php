@@ -13,6 +13,15 @@ function consultio_enqueue_styles()
     wp_enqueue_style('child-style', get_stylesheet_directory_uri() . '/style.css', array(
         $parent_style
     ));
+
+    if (is_page('client-portal')) {
+        wp_enqueue_style(
+            'legacyx-client-portal-layout',
+            get_stylesheet_directory_uri() . '/client-portal-layout.css',
+            array('child-style'),
+            filemtime(get_stylesheet_directory() . '/client-portal-layout.css')
+        );
+    }
 }
 
 add_action('wp_enqueue_scripts', 'consultio_enqueue_styles');
