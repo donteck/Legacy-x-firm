@@ -1,0 +1,28 @@
+name: Verify Phase 1A Live Homepage
+
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-phase1a-live.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check uncached homepage markers
+        shell: bash
+        run: |
+          set -e
+          URL="https://legacyxfirm.us/?legacyx_verify=$(date +%s)"
+          curl -L -sS -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$URL" -o /tmp/home.html
+          echo "HTTP_BYTES=$(wc -c < /tmp/home.html)"
+          for marker in 'HomeNew' '+854 325 3218' 'demo.casethemes.net' 'Merchay.com' '380 St Kilda Road' '(210) 123-451' 'At vero eos'; do
+            if grep -Fqi "$marker" /tmp/home.html; then
+              echo "PRESENT: $marker"
+            else
+              echo "CLEAN: $marker"
+            fi
+          done
+          if grep -Fqi '(424) 703-0312' /tmp/home.html || grep -Fqi '4247030312' /tmp/home.html; then echo 'PRESENT: Legacy X Firm phone'; else echo 'MISSING: Legacy X Firm phone'; fi
+          if grep -Fqi 'Client Portal' /tmp/home.html; then echo 'PRESENT: Client Portal'; else echo 'MISSING: Client Portal'; fi
