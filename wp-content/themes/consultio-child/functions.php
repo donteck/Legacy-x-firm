@@ -125,7 +125,10 @@ function legacyx_optimize_woocommerce_assets()
         'woocommerce-layout',
         'woocommerce-smallscreen',
         'woocommerce-general',
-        'woocommerce-inline'
+        'woocommerce-inline',
+        'wc-blocks-style',
+        'wc-blocks-vendors-style',
+        'wc-blocks-packages-style'
     );
 
     foreach ($styles as $handle) {
@@ -154,20 +157,95 @@ function legacyx_disable_self_pingbacks(&$links)
 }
 add_action('pre_ping', 'legacyx_disable_self_pingbacks');
 
-/** Add native lazy loading/async decoding to normal content images. */
+/**
+ * WordPress already applies native lazy-loading heuristics. Do not force lazy
+ * loading on every attachment, because the hero/LCP image should load early.
+ * Async decoding remains safe for regular attachment images.
+ */
 function legacyx_optimize_image_attributes($attr)
 {
-    if (!is_admin()) {
-        if (empty($attr['loading'])) {
-            $attr['loading'] = 'lazy';
-        }
-        if (empty($attr['decoding'])) {
-            $attr['decoding'] = 'async';
-        }
+    if (!is_admin() && empty($attr['decoding'])) {
+        $attr['decoding'] = 'async';
     }
     return $attr;
 }
 add_filter('wp_get_attachment_image_attributes', 'legacyx_optimize_image_attributes', 20);
+
+/**
+ * The Client Portal is a custom PHP/CSS screen and does not use Elementor,
+ * Revolution Slider, CF7, WooCommerce blocks, or Gutenberg frontend styles.
+ * Remove those assets only on this page to make authentication/dashboard
+ * rendering substantially lighter without affecting the rest of the site.
+ */
+function legacyx_optimize_client_portal_assets()
+{
+    if (is_admin() || !is_page('client-portal')) {
+        return;
+    }
+
+    $scripts = array(
+        'elementor-webpack-runtime',
+        'elementor-frontend-modules',
+        'elementor-frontend',
+        'elementor-pro-frontend',
+        'contact-form-7',
+        'wpcf7-recaptcha',
+        'google-recaptcha',
+        'tp-tools',
+        'revmin',
+        'rs6',
+        'wc-blocks-runtime',
+        'wc-blocks-middleware',
+        'wc-blocks-data-store'
+    );
+
+    foreach ($scripts as $handle) {
+        wp_dequeue_script($handle);
+    }
+
+    $styles = array(
+        'elementor-frontend',
+        'elementor-post-0',
+        'elementor-pro',
+        'contact-form-7',
+        'wp-block-library',
+        'wp-block-library-theme',
+        'global-styles',
+        'classic-theme-styles',
+        'rs-plugin-settings',
+        'rs6',
+        'wc-blocks-style',
+        'wc-blocks-vendors-style',
+        'wc-blocks-packages-style'
+    );
+
+    foreach ($styles as $handle) {
+        wp_dequeue_style($handle);
+    }
+}
+add_action('wp_enqueue_scripts', 'legacyx_optimize_client_portal_assets', 1000);
+
+/**
+ * Add lightweight connection hints for common external font hosts used by
+ * Consultio/Elementor. Browsers can establish these connections earlier.
+ */
+function legacyx_resource_hints($urls, $relation_type)
+{
+    if ('preconnect' === $relation_type) {
+        $urls[] = array(
+            'href'        => 'https://fonts.gstatic.com',
+            'crossorigin' => 'anonymous',
+        );
+    }
+
+    if ('dns-prefetch' === $relation_type) {
+        $urls[] = '//fonts.googleapis.com';
+        $urls[] = '//fonts.gstatic.com';
+    }
+
+    return $urls;
+}
+add_filter('wp_resource_hints', 'legacyx_resource_hints', 10, 2);
 
 /* ==========================================================
  * LEGACY X FIRM DEMO CONTENT CLEANUP
