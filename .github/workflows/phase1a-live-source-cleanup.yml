@@ -1,0 +1,162 @@
+name: Phase 1A Live Source Cleanup
+
+on:
+  push:
+    paths:
+      - '.github/workflows/phase1a-live-source-cleanup.yml'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Backup and clean live homepage data
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" 'bash -s' <<'REMOTE'
+          set -e
+          cd /home/legacyx/web/legacyxfirm.us/public_html
+
+          TS=$(date +%Y%m%d-%H%M%S)
+          BACKUP_DIR="/home/legacyx/backups/legacyxfirm-phase1a-$TS"
+          mkdir -p "$BACKUP_DIR"
+
+          DB_NAME=$(wp config get DB_NAME --type=constant 2>/dev/null)
+          DB_USER=$(wp config get DB_USER --type=constant 2>/dev/null)
+          DB_PASS=$(wp config get DB_PASSWORD --type=constant 2>/dev/null)
+          DB_HOST=$(wp config get DB_HOST --type=constant 2>/dev/null)
+          MYSQL_PWD="$DB_PASS" mariadb-dump -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" > "$BACKUP_DIR/database.sql"
+          cp -a wp-content/themes/consultio-child "$BACKUP_DIR/consultio-child"
+          echo "Backup created successfully."
+
+          wp eval '
+            global $wpdb;
+
+            $site = home_url("/");
+            $services = home_url("/#services");
+
+            // Clean the active one-page menu title without changing its link structure.
+            $items = wp_get_nav_menu_items(43);
+            if ($items) {
+              foreach ($items as $item) {
+                $title = trim(wp_strip_all_tags($item->title));
+                if (strcasecmp($title, "HomeNew") === 0) {
+                  wp_update_post(["ID" => $item->ID, "post_title" => "Home"]);
+                  echo "Renamed HomeNew menu item to Home.\n";
+                }
+              }
+            }
+
+            // Replace only known demo remnants in the live Elementor footer template.
+            $footer_id = 20;
+            $footer_replacements = [
+              "2024 © All rights reserved by" => "© " . date("Y") . " Legacy X Firm. All rights reserved.",
+              "Merchay.com" => "Legacy X Firm",
+              "merchay.com" => "legacyxfirm.us",
+              "380 St Kilda Road, Melbourne, Australia" => "Boston • Miami • Paris • Worldwide",
+              "Call Us: (210) 123-451 (Sat - Thursday)" => "Call Us: (424) 703-0312",
+              "Monday - Friday (10am - 05 pm)" => "Professional advisory services by appointment",
+              "At vero eos et accusamus et iusto odio digni goikussimos ducimus qui to bonfo blanditiis praese. Ntium voluum deleniti atque." => "Integrated credit, business, financial, tax, grant, and organizational advisory solutions.",
+              "https://demo.casethemes.net" => rtrim($site, "/"),
+              "http://demo.casethemes.net" => rtrim($site, "/")
+            ];
+
+            foreach (["post_content", "post_excerpt"] as $field) {
+              $value = get_post_field($field, $footer_id, "raw");
+              if (is_string($value) && $value !== "") {
+                $new = strtr($value, $footer_replacements);
+                if ($new !== $value) {
+                  wp_update_post(["ID" => $footer_id, $field => $new]);
+                }
+              }
+            }
+
+            foreach (["_elementor_data"] as $meta_key) {
+              $value = get_post_meta($footer_id, $meta_key, true);
+              if (is_string($value) && $value !== "") {
+                $new = strtr($value, $footer_replacements);
+                if ($new !== $value) {
+                  update_post_meta($footer_id, $meta_key, wp_slash($new));
+                  echo "Updated live Elementor footer content.\n";
+                }
+              }
+            }
+
+            // Clean known demo widget options that may feed footer/header contact blocks.
+            foreach (["widget_getintouch_widget", "widget_media_image"] as $option_name) {
+              $value = get_option($option_name);
+              if ($value !== false) {
+                $serialized = maybe_serialize($value);
+                $new = strtr($serialized, $footer_replacements);
+                if ($new !== $serialized) {
+                  $decoded = maybe_unserialize($new);
+                  update_option($option_name, $decoded);
+                  echo "Updated {$option_name}.\n";
+                }
+              }
+            }
+
+            // Update Revolution Slider 1 data directly, preserving layout and animation.
+            $tables = [$wpdb->prefix . "revslider_sliders", $wpdb->prefix . "revslider_slides", $wpdb->prefix . "revslider_static_slides"];
+            $slider_replacements = [
+              "+854 325 3218" => "+1 (424) 703-0312",
+              "854 325 3218" => "(424) 703-0312",
+              "https://demo.casethemes.net" => rtrim($services, "/"),
+              "http://demo.casethemes.net" => rtrim($services, "/")
+            ];
+
+            foreach ($tables as $table) {
+              $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table));
+              if ($exists !== $table) continue;
+              $columns = $wpdb->get_results("SHOW COLUMNS FROM `{$table}`");
+              foreach ($columns as $column) {
+                $type = strtolower($column->Type);
+                if (strpos($type, "char") === false && strpos($type, "text") === false && strpos($type, "blob") === false && strpos($type, "json") === false) continue;
+                $col = $column->Field;
+                foreach ($slider_replacements as $from => $to) {
+                  $sql = $wpdb->prepare("UPDATE `{$table}` SET `{$col}` = REPLACE(`{$col}`, %s, %s) WHERE `{$col}` LIKE %s", $from, $to, "%" . $wpdb->esc_like($from) . "%");
+                  $count = $wpdb->query($sql);
+                  if ($count) echo "Updated {$table}.{$col}: {$count} row(s).\n";
+                }
+              }
+            }
+
+            // Elementor regenerates frontend CSS after data changes.
+            if (class_exists("\\Elementor\\Plugin")) {
+              try { \\Elementor\\Plugin::$instance->files_manager->clear_cache(); } catch (Throwable $e) {}
+            }
+            clean_post_cache($footer_id);
+            wp_cache_flush();
+          '
+
+          echo '=== VERIFY KEY SOURCES ==='
+          wp eval '
+            global $wpdb;
+            $items = wp_get_nav_menu_items(43);
+            if ($items) foreach ($items as $i) echo "MENU {$i->ID} | {$i->title} | {$i->url}\n";
+            $footer = get_post_meta(20, "_elementor_data", true);
+            foreach (["demo.casethemes.net", "merchay.com", "380 St Kilda", "(210) 123-451"] as $needle) {
+              echo "FOOTER {$needle}: " . (stripos((string)$footer, $needle) === false ? "clean" : "still-present") . "\n";
+            }
+            foreach ([$wpdb->prefix . "revslider_sliders", $wpdb->prefix . "revslider_slides", $wpdb->prefix . "revslider_static_slides"] as $table) {
+              if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) !== $table) continue;
+              $cols = $wpdb->get_results("SHOW COLUMNS FROM `{$table}`");
+              foreach ($cols as $c) {
+                $type = strtolower($c->Type);
+                if (strpos($type,"char")===false && strpos($type,"text")===false && strpos($type,"blob")===false && strpos($type,"json")===false) continue;
+                $col=$c->Field;
+                $n=$wpdb->get_var("SELECT COUNT(*) FROM `{$table}` WHERE `{$col}` LIKE \"%854 325 3218%\"");
+                if ($n) echo "OLD PHONE remains in {$table}.{$col}: {$n}\n";
+              }
+            }
+          '
+          echo '=== PHASE 1A SOURCE CLEANUP COMPLETE ==='
+          REMOTE
