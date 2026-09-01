@@ -1,0 +1,83 @@
+# ============================================
+# LEGACY X FIRM WORDPRESS GITHUB REPOSITORY
+# ============================================
+
+# WordPress sensitive configuration
+wp-config.php
+.env
+.env.*
+.htaccess
+
+# WordPress core
+/wp-admin/
+/wp-includes/
+/index.php
+/license.txt
+/readme.html
+/wp-activate.php
+/wp-blog-header.php
+/wp-comments-post.php
+/wp-config-sample.php
+/wp-cron.php
+/wp-links-opml.php
+/wp-load.php
+/wp-login.php
+/wp-mail.php
+/wp-settings.php
+/wp-signup.php
+/wp-trackback.php
+/xmlrpc.php
+
+# Ignore everything in wp-content by default
+/wp-content/*
+
+# Keep wp-content folder
+!/wp-content/
+
+# Keep themes folder
+!/wp-content/themes/
+
+# Ignore all themes
+/wp-content/themes/*
+
+# Track only Legacy X Firm child theme
+!/wp-content/themes/consultio-child/
+
+# Backups and uploads
+wp-content/uploads/
+wp-content/uploads-old/
+wp-content/updraft/
+wp-content/backups/
+wp-content/ai1wm-backups/
+
+# Cache and temporary files
+wp-content/cache/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/endurance-page-cache/
+
+# Security/runtime data
+wp-content/wflogs/
+wp-content/imunify-security/
+wp-content/jetpack-waf/
+
+# Old folders
+wp-content/plugins-old/
+wp-content/themes-old/
+wp-content/mu-plugins-old/
+
+# Logs
+*.log
+error_log
+debug.log
+
+# Temporary files
+wp-content/temp-write-test-*
+
+# Dependencies
+node_modules/
+vendor/
+
+# OS files
+.DS_Store
+Thumbs.db
