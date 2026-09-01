@@ -1,0 +1,67 @@
+name: Phase 1A Homepage Cleanup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.HESTIA_SSH_KEY }}
+          HOST: ${{ secrets.HESTIA_HOST }}
+          PORT: ${{ secrets.HESTIA_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/legacyx
+          chmod 600 ~/.ssh/legacyx
+          ssh-keyscan -p "$PORT" "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Professionalize homepage and footer
+        env:
+          HOST: ${{ secrets.HESTIA_HOST }}
+          USER: ${{ secrets.HESTIA_USER }}
+          PORT: ${{ secrets.HESTIA_PORT }}
+          ROOT: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/legacyx -p "$PORT" "$USER@$HOST" "ROOT='$ROOT' bash -s" <<'REMOTE'
+          set -e
+          cd "$ROOT"
+
+          echo 'Front page:'
+          wp option get page_on_front
+          FRONT_ID=$(wp option get page_on_front)
+          echo "Front page ID: $FRONT_ID"
+
+          # Rebrand the primary navigation item without changing its destination.
+          wp menu item list 'Menu One Page' --format=csv --fields=db_id,title,url 2>/dev/null || true
+          MENU_ID=$(wp menu list --fields=term_id,name --format=csv | awk -F, 'tolower($2) ~ /menu one page/ {print $1; exit}')
+          if [ -n "$MENU_ID" ]; then
+            HOME_ITEM=$(wp menu item list "$MENU_ID" --fields=db_id,title --format=csv | awk -F, 'tolower($2) ~ /^home(new)?$/ {print $1; exit}')
+            if [ -n "$HOME_ITEM" ]; then
+              wp menu item update "$HOME_ITEM" --title='Home'
+            fi
+          fi
+
+          # Replace obvious homepage demo/template copy while preserving Elementor/slider structure.
+          if [ -n "$FRONT_ID" ] && [ "$FRONT_ID" != "0" ]; then
+            CONTENT=$(wp post get "$FRONT_ID" --field=post_content)
+            CONTENT=${CONTENT//We are the best agency to improve your deals./Building stronger financial and business futures.}
+            CONTENT=${CONTENT//We are giving the best services for you./Integrated solutions for every stage of your journey.}
+            CONTENT=${CONTENT//We have many clients world wide!/Solutions designed for clients worldwide.}
+            CONTENT=${CONTENT//We’re here to share story & more news/Insights to help you build, manage, finance and grow.}
+            CONTENT=${CONTENT//Send us a newsletter to get update/Stay informed with Legacy X Firm insights and updates.}
+            wp post update "$FRONT_ID" --post_content="$CONTENT"
+          fi
+
+          # Replace template footer copyright text wherever it is stored in widgets/options when possible.
+          wp search-replace '2024 © All rights reserved by Merchay.com' '© 2026 Legacy X Firm. All rights reserved.' --all-tables-with-prefix --precise --skip-columns=guid --report-changed-only || true
+          wp search-replace '380 St Kilda Road, Melbourne, Australia' 'Boston - Miami - Paris | Worldwide' --all-tables-with-prefix --precise --skip-columns=guid --report-changed-only || true
+          wp search-replace 'Call Us: (210) 123-451 (Sat - Thursday)' 'Call Us: (424) 703-0312' --all-tables-with-prefix --precise --skip-columns=guid --report-changed-only || true
+          wp search-replace 'Monday - Friday (10am - 05 pm)' 'Monday - Friday (8AM - 9PM)' --all-tables-with-prefix --precise --skip-columns=guid --report-changed-only || true
+          wp search-replace 'At vero eos et accusamus et iusto odio digni goikussimos ducimus qui to bonfo blanditiis praese. Ntium voluum deleniti atque.' 'Integrated business, credit, financial, tax, grant, and organizational solutions built around your goals.' --all-tables-with-prefix --precise --skip-columns=guid --report-changed-only || true
+
+          wp cache flush || true
+          echo 'Phase 1A cleanup complete.'
+          REMOTE
