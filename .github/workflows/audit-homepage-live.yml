@@ -1,0 +1,78 @@
+name: Audit Live Homepage Sources
+
+on:
+  push:
+    paths:
+      - '.github/workflows/audit-homepage-live.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Audit live WordPress homepage sources
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" 'bash -s' <<'REMOTE'
+          set -e
+          cd /home/legacyx/web/legacyxfirm.us/public_html
+
+          echo '=== FRONT PAGE SETTINGS ==='
+          FRONT_ID=$(wp option get page_on_front 2>/dev/null || true)
+          POSTS_ID=$(wp option get page_for_posts 2>/dev/null || true)
+          echo "page_on_front=$FRONT_ID"
+          echo "page_for_posts=$POSTS_ID"
+          if [ -n "$FRONT_ID" ] && [ "$FRONT_ID" != "0" ]; then
+            wp post get "$FRONT_ID" --fields=ID,post_title,post_name,post_status,post_type --format=table 2>/dev/null || true
+          fi
+
+          echo '=== ACTIVE THEME ==='
+          wp theme list --status=active --fields=name,status,version --format=table 2>/dev/null || true
+
+          echo '=== MENUS ==='
+          wp menu list --fields=term_id,name,slug,count --format=table 2>/dev/null || true
+          echo '=== PRIMARY MENU ITEMS ==='
+          wp menu item list "Menu One Page" --fields=db_id,title,url,type,status --format=table 2>/dev/null || true
+
+          echo '=== SIDEBARS / WIDGETS ==='
+          wp sidebar list --fields=name,id --format=table 2>/dev/null || true
+          wp widget list --all --fields=name,id,sidebar,position --format=table 2>/dev/null || true
+
+          echo '=== CONTENT / META SOURCES WITH DEMO MARKERS ==='
+          wp eval '
+            global $wpdb;
+            $markers = ["demo.casethemes.net", "merchay.com", "380 St Kilda", "+854 325 3218", "At vero eos", "HomeNew"];
+            foreach ($markers as $marker) {
+              echo "-- {$marker} --\n";
+              $like = "%" . $wpdb->esc_like($marker) . "%";
+              $posts = $wpdb->get_results($wpdb->prepare("SELECT ID, post_type, post_status, post_title FROM {$wpdb->posts} WHERE post_content LIKE %s OR post_excerpt LIKE %s ORDER BY ID LIMIT 30", $like, $like));
+              foreach ($posts as $p) echo "POST {$p->ID} | {$p->post_type} | {$p->post_status} | {$p->post_title}\n";
+              $meta = $wpdb->get_results($wpdb->prepare("SELECT post_id, meta_key FROM {$wpdb->postmeta} WHERE meta_value LIKE %s ORDER BY post_id LIMIT 50", $like));
+              foreach ($meta as $m) echo "META {$m->post_id} | {$m->meta_key}\n";
+              $opts = $wpdb->get_results($wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_value LIKE %s ORDER BY option_name LIMIT 50", $like));
+              foreach ($opts as $o) echo "OPTION {$o->option_name}\n";
+            }
+          ' 2>/dev/null || true
+
+          echo '=== REVOLUTION SLIDER TABLES / TITLES ==='
+          wp eval '
+            global $wpdb;
+            $tables = $wpdb->get_col("SHOW TABLES LIKE \"%revslider%\"");
+            foreach ($tables as $t) echo "TABLE {$t}\n";
+            $sliders = $wpdb->prefix . "revslider_sliders";
+            if (in_array($sliders, $tables, true)) {
+              $rows = $wpdb->get_results("SELECT id,title,alias,type FROM {$sliders} ORDER BY id");
+              foreach ($rows as $r) echo "SLIDER {$r->id} | {$r->title} | {$r->alias} | {$r->type}\n";
+            }
+          ' 2>/dev/null || true
+
+          echo '=== DONE ==='
+          REMOTE
