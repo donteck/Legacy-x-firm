@@ -1,0 +1,36 @@
+name: Audit Legacy X Firm Performance
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/audit-performance.yml"
+
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Audit WordPress plugins and size
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "${{ secrets.HESTIA_PORT }}" -o BatchMode=yes \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}' && \
+             echo '=== PLUGINS ===' && wp plugin list --fields=name,status,version,update --format=table && \
+             echo '=== THEMES ===' && wp theme list --fields=name,status,version,update --format=table && \
+             echo '=== PLUGIN DIRECTORY SIZES ===' && du -sh wp-content/plugins/* 2>/dev/null | sort -h && \
+             echo '=== WP-CONTENT TOP LEVEL ===' && du -sh wp-content/* 2>/dev/null | sort -h | tail -n 25 && \
+             echo '=== ACTIVE CRON COUNT ===' && wp cron event list --format=count && \
+             echo '=== AUTOLOAD SIZE ===' && wp db query \"SELECT ROUND(SUM(LENGTH(option_value))/1024/1024,2) AS autoload_mb FROM wp_options WHERE autoload='yes';\" --skip-column-names 2>/dev/null || true"
