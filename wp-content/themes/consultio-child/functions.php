@@ -84,8 +84,8 @@ function legacyx_remove_wp_embed_script()
 add_action('wp_footer', 'legacyx_remove_wp_embed_script', 1);
 
 /**
- * Strip WooCommerce frontend assets from pages that do not use commerce UI.
- * Cart, checkout, account and WooCommerce catalog/product pages are untouched.
+ * Strip WooCommerce and YITH frontend assets from ordinary marketing pages.
+ * Shop, product, cart, checkout and account screens keep the full commerce UI.
  */
 function legacyx_optimize_woocommerce_assets()
 {
@@ -113,7 +113,16 @@ function legacyx_optimize_woocommerce_assets()
         'wc-country-select',
         'wc-address-i18n',
         'wc-password-strength-meter',
-        'selectWoo'
+        'selectWoo',
+        'jquery-selectBox',
+        'wc-prettyPhoto',
+        'jquery-yith-wcwl',
+        'yith-wcqv-frontend',
+        'sourcebuster-js',
+        'wc-order-attribution',
+        'wc-zoom',
+        'wc-photoswipe',
+        'wc-photoswipe-ui-default'
     );
 
     foreach ($scripts as $handle) {
@@ -128,14 +137,21 @@ function legacyx_optimize_woocommerce_assets()
         'woocommerce-inline',
         'wc-blocks-style',
         'wc-blocks-vendors-style',
-        'wc-blocks-packages-style'
+        'wc-blocks-packages-style',
+        'jquery-selectBox',
+        'woocommerce_prettyPhoto_css',
+        'yith-wcwl-main',
+        'yith-quick-view',
+        'photoswipe',
+        'photoswipe-default-skin'
     );
 
     foreach ($styles as $handle) {
         wp_dequeue_style($handle);
+        wp_deregister_style($handle);
     }
 }
-add_action('wp_enqueue_scripts', 'legacyx_optimize_woocommerce_assets', 999);
+add_action('wp_enqueue_scripts', 'legacyx_optimize_woocommerce_assets', 9999);
 
 function legacyx_remove_public_dashicons()
 {
@@ -143,7 +159,7 @@ function legacyx_remove_public_dashicons()
         wp_dequeue_style('dashicons');
     }
 }
-add_action('wp_enqueue_scripts', 'legacyx_remove_public_dashicons', 999);
+add_action('wp_enqueue_scripts', 'legacyx_remove_public_dashicons', 9999);
 
 /** Disable self-pingbacks so internal links do not create needless requests. */
 function legacyx_disable_self_pingbacks(&$links)
@@ -188,7 +204,9 @@ function legacyx_optimize_client_portal_assets()
         'elementor-frontend-modules',
         'elementor-frontend',
         'elementor-pro-frontend',
+        'swv',
         'contact-form-7',
+        'cf7mls',
         'wpcf7-recaptcha',
         'google-recaptcha',
         'tp-tools',
@@ -196,11 +214,20 @@ function legacyx_optimize_client_portal_assets()
         'rs6',
         'wc-blocks-runtime',
         'wc-blocks-middleware',
-        'wc-blocks-data-store'
+        'wc-blocks-data-store',
+        'jquery-selectBox',
+        'jquery-yith-wcwl',
+        'yith-wcqv-frontend',
+        'sourcebuster-js',
+        'wc-order-attribution',
+        'wc-zoom',
+        'wc-photoswipe',
+        'wc-photoswipe-ui-default'
     );
 
     foreach ($scripts as $handle) {
         wp_dequeue_script($handle);
+        wp_deregister_script($handle);
     }
 
     $styles = array(
@@ -208,6 +235,9 @@ function legacyx_optimize_client_portal_assets()
         'elementor-post-0',
         'elementor-pro',
         'contact-form-7',
+        'cf7mls',
+        'cf7mls_progress_bar',
+        'cf7mls_animate',
         'wp-block-library',
         'wp-block-library-theme',
         'global-styles',
@@ -216,14 +246,21 @@ function legacyx_optimize_client_portal_assets()
         'rs6',
         'wc-blocks-style',
         'wc-blocks-vendors-style',
-        'wc-blocks-packages-style'
+        'wc-blocks-packages-style',
+        'jquery-selectBox',
+        'woocommerce_prettyPhoto_css',
+        'yith-wcwl-main',
+        'yith-quick-view',
+        'photoswipe',
+        'photoswipe-default-skin'
     );
 
     foreach ($styles as $handle) {
         wp_dequeue_style($handle);
+        wp_deregister_style($handle);
     }
 }
-add_action('wp_enqueue_scripts', 'legacyx_optimize_client_portal_assets', 1000);
+add_action('wp_enqueue_scripts', 'legacyx_optimize_client_portal_assets', 10000);
 
 /**
  * Add lightweight connection hints for common external font hosts used by
