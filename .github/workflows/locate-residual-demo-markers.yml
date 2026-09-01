@@ -1,0 +1,55 @@
+name: Locate Residual Demo Markers
+
+on:
+  push:
+    paths:
+      - '.github/workflows/locate-residual-demo-markers.yml'
+  workflow_dispatch:
+
+jobs:
+  locate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Locate markers
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" 'bash -s' <<'REMOTE'
+          set -e
+          cd /home/legacyx/web/legacyxfirm.us/public_html
+          wp eval '
+            global $wpdb;
+            $markers=["854 325 3218","demo.casethemes.net"];
+            $tables=$wpdb->get_col("SHOW TABLES");
+            foreach($markers as $marker){
+              echo "=== {$marker} ===\n";
+              foreach($tables as $table){
+                $cols=$wpdb->get_results("SHOW COLUMNS FROM `{$table}`");
+                foreach($cols as $c){
+                  $type=strtolower($c->Type);
+                  if(strpos($type,"char")===false && strpos($type,"text")===false && strpos($type,"blob")===false && strpos($type,"json")===false) continue;
+                  $col=$c->Field;
+                  $count=$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM `{$table}` WHERE `{$col}` LIKE %s","%".$wpdb->esc_like($marker)."%"));
+                  if($count) echo "{$table}.{$col} | {$count}\n";
+                }
+              }
+            }
+          '
+          echo '=== RENDERED CONTEXT ==='
+          curl -L -sS -H 'Cache-Control: no-cache' "https://legacyxfirm.us/?locate=$(date +%s)" > /tmp/home.html
+          python3 - <<'PY'
+          import re
+          html=open('/tmp/home.html',encoding='utf-8',errors='ignore').read()
+          for marker in ['854 325 3218','demo.casethemes.net']:
+              print('---',marker,'---')
+              for m in list(re.finditer(re.escape(marker),html,re.I))[:8]:
+                  s=max(0,m.start()-180); e=min(len(html),m.end()+240)
+                  print(re.sub(r'\s+',' ',html[s:e]))
+          PY
+          REMOTE
