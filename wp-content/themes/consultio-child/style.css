@@ -3,254 +3,347 @@ Theme Name: Consultio Child
 Theme URI: http://demo.casethemes.net/consultio/
 Author: Case-Themes
 Author URI: https://themeforest.net/user/case-themes/portfolio/
-Description: Consultio is the Perfect Consulting Finane & Business WordPress Theme. Consultio is best suited for corporate website like Consultioial Advisor, Accountant, Consulting Firms, insurance, loan, tax help, Investment firm etc. This is a business theme that is help full for online presence for Corporate Business and Consultioial Firms.   
+Description: Consultio is the Perfect Consulting Finane & Business WordPress Theme. Consultio is best suited for corporate website like Consultioial Advisor, Accountant, Consulting Firms, insurance, loan, tax help, Investment firm etc. This is a business theme that is help full for online presence for Corporate Business and Consultioial Firms.
 Version: 3.2.1
 License: ThemeForest
 License URI: https://themeforest.net/licenses
 Template: consultio
 Text Domain: consultio-child
-Tags: advisor, attorney, corporate accountant, consulting, consultant, finance, insurance, invest, investment, investor, mutual funds, pensions, retirement, saving, trading 
+Tags: advisor, attorney, corporate accountant, consulting, consultant, finance, insurance, invest, investment, investor, mutual funds, pensions, retirement, saving, trading
 This theme, like WordPress, is licensed under the GPL.
 Use it to make something cool, have fun, and share what you've learned with others.
 */
 
-/* Legacy X Firm Client Portal */
-.legacyx-portal {
-    background: linear-gradient(135deg, #0d1117 0%, #151b24 55%, #222b36 100%);
+/* ==========================================================
+   LEGACY X FIRM CLIENT PORTAL
+   All rules are scoped to #legacyx-client-portal so the portal
+   cannot visually interfere with the main Legacy X Firm site.
+   ========================================================== */
+
+#legacyx-client-portal {
+    --lx-ink: #151515;
+    --lx-muted: #6f747c;
+    --lx-line: #e8e9ec;
+    --lx-panel: #ffffff;
+    --lx-soft: #f6f7f9;
+    --lx-orange: #f05a19;
+    --lx-orange-2: #ff8a22;
+    --lx-dark: #17191d;
+    --lx-shadow: 0 18px 55px rgba(20, 24, 31, .10);
+    background: #f5f6f8;
+    color: var(--lx-ink);
     min-height: 760px;
-    color: #ffffff;
+    font-family: inherit;
+    overflow: hidden;
 }
 
-.legacyx-portal-hero {
-    padding: 90px 24px 110px;
-}
-
-.legacyx-portal-shell {
-    width: min(1180px, 100%);
-    margin: 0 auto;
-}
-
-.legacyx-portal-brand {
-    max-width: 720px;
-    margin-bottom: 42px;
-}
-
-.legacyx-portal-eyebrow,
-.legacyx-dashboard-kicker {
-    display: inline-block;
-    margin-bottom: 12px;
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: #f37321;
-}
-
-.legacyx-portal-brand h1 {
-    margin: 0 0 16px;
-    color: #ffffff;
-    font-size: clamp(42px, 6vw, 72px);
-    line-height: 1;
-    letter-spacing: -0.04em;
-}
-
-.legacyx-portal-brand p,
-.legacyx-dashboard-topbar p {
-    margin: 0;
-    color: #c7ced8;
-    font-size: 18px;
-    line-height: 1.7;
-}
-
-.legacyx-login-card,
-.legacyx-dashboard-wrap {
-    background: #ffffff;
-    color: #14181f;
-    border-radius: 22px;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
-}
-
-.legacyx-login-card {
-    width: min(520px, 100%);
-    padding: 42px;
-}
-
-.legacyx-card-heading h2,
-.legacyx-dashboard-topbar h2 {
-    margin: 0 0 8px;
-    color: #121821;
-    font-size: 32px;
-}
-
-.legacyx-card-heading p {
-    margin: 0 0 28px;
-    color: #68717f;
-}
-
-#legacyx-loginform p {
-    margin: 0 0 18px;
-}
-
-#legacyx-loginform label {
-    display: block;
-    margin-bottom: 7px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #303845;
-}
-
-#legacyx-loginform input[type="text"],
-#legacyx-loginform input[type="password"] {
-    width: 100%;
-    height: 52px;
-    padding: 0 14px;
-    border: 1px solid #d8dde5;
-    border-radius: 10px;
-    background: #f8fafc;
+#legacyx-client-portal *,
+#legacyx-client-portal *::before,
+#legacyx-client-portal *::after {
     box-sizing: border-box;
 }
 
-#legacyx-loginform .login-remember label {
+#legacyx-client-portal .legacyx-portal-hero {
+    position: relative;
+    padding: 70px 28px 100px;
+    background:
+        radial-gradient(circle at 85% 0%, rgba(240, 90, 25, .16), transparent 30%),
+        linear-gradient(180deg, #fff 0 255px, #f5f6f8 255px 100%);
+}
+
+#legacyx-client-portal .legacyx-portal-shell {
+    width: min(1240px, 100%);
+    margin: 0 auto;
+}
+
+#legacyx-client-portal .legacyx-portal-brand {
+    position: relative;
+    max-width: 760px;
+    margin: 0 0 38px;
+}
+
+#legacyx-client-portal .legacyx-portal-eyebrow,
+#legacyx-client-portal .legacyx-dashboard-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 12px;
+    color: var(--lx-orange);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+#legacyx-client-portal .legacyx-portal-eyebrow::before,
+#legacyx-client-portal .legacyx-dashboard-kicker::before {
+    content: "";
+    width: 24px;
+    height: 2px;
+    background: var(--lx-orange);
+    border-radius: 2px;
+}
+
+#legacyx-client-portal .legacyx-portal-brand h1 {
+    margin: 0 0 14px !important;
+    color: var(--lx-dark) !important;
+    font-size: clamp(42px, 5vw, 66px) !important;
+    font-weight: 800 !important;
+    line-height: 1.02 !important;
+    letter-spacing: -.045em;
+}
+
+#legacyx-client-portal .legacyx-portal-brand p {
+    max-width: 650px;
+    margin: 0 !important;
+    color: var(--lx-muted) !important;
+    font-size: 17px !important;
+    line-height: 1.7 !important;
+}
+
+/* LOGIN */
+#legacyx-client-portal .legacyx-login-card {
+    width: min(540px, 100%);
+    padding: 42px;
+    background: var(--lx-panel);
+    border: 1px solid rgba(20, 24, 31, .06);
+    border-radius: 22px;
+    box-shadow: var(--lx-shadow);
+}
+
+#legacyx-client-portal .legacyx-card-heading h2 {
+    margin: 0 0 8px !important;
+    color: var(--lx-dark) !important;
+    font-size: 31px !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+}
+
+#legacyx-client-portal .legacyx-card-heading p {
+    margin: 0 0 28px !important;
+    color: var(--lx-muted) !important;
+}
+
+#legacyx-client-portal #legacyx-loginform p { margin: 0 0 18px; }
+#legacyx-client-portal #legacyx-loginform label {
+    display: block;
+    margin: 0 0 7px;
+    color: #34383f;
+    font-size: 13px;
+    font-weight: 700;
+}
+#legacyx-client-portal #legacyx-loginform input[type="text"],
+#legacyx-client-portal #legacyx-loginform input[type="password"] {
+    width: 100%;
+    height: 54px;
+    padding: 0 15px;
+    border: 1px solid #dfe2e7;
+    border-radius: 10px;
+    background: #fafbfc;
+    box-shadow: none;
+    color: #1d2025;
+}
+#legacyx-client-portal #legacyx-loginform input:focus {
+    border-color: var(--lx-orange);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(240, 90, 25, .10);
+}
+#legacyx-client-portal #legacyx-loginform .login-remember label {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 600;
 }
-
-#legacyx-loginform .button-primary {
+#legacyx-client-portal #legacyx-loginform .button-primary {
     width: 100%;
-    min-height: 52px;
+    min-height: 54px;
     border: 0;
     border-radius: 10px;
-    background: linear-gradient(90deg, #f15a24, #ff8a24);
-    color: #ffffff;
+    background: linear-gradient(100deg, var(--lx-orange), var(--lx-orange-2));
+    color: #fff;
     font-weight: 800;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
     cursor: pointer;
 }
-
-.legacyx-login-links {
-    margin: 6px 0 26px;
-}
-
-.legacyx-login-links a,
-.legacyx-card-link {
-    color: #e85e20;
-    font-weight: 700;
-}
-
-.legacyx-support-note {
-    padding-top: 24px;
-    border-top: 1px solid #e7eaf0;
+#legacyx-client-portal .legacyx-login-links { margin: 4px 0 26px; }
+#legacyx-client-portal .legacyx-login-links a,
+#legacyx-client-portal .legacyx-card-link { color: var(--lx-orange); font-weight: 750; }
+#legacyx-client-portal .legacyx-support-note {
     display: grid;
-    gap: 5px;
-    color: #68717f;
-    font-size: 14px;
+    gap: 4px;
+    padding-top: 23px;
+    border-top: 1px solid var(--lx-line);
+    color: var(--lx-muted);
+    font-size: 13px;
+}
+#legacyx-client-portal .legacyx-support-note strong { color: #25282d; }
+
+/* DASHBOARD */
+#legacyx-client-portal .legacyx-dashboard-wrap {
+    overflow: hidden;
+    background: var(--lx-panel);
+    border: 1px solid rgba(20, 24, 31, .06);
+    border-radius: 24px;
+    box-shadow: var(--lx-shadow);
 }
 
-.legacyx-support-note strong {
-    color: #202733;
-}
-
-.legacyx-dashboard-wrap {
-    padding: 38px;
-}
-
-.legacyx-dashboard-topbar {
+#legacyx-client-portal .legacyx-dashboard-topbar {
     display: flex;
-    justify-content: space-between;
-    gap: 24px;
     align-items: center;
-    padding-bottom: 32px;
-    margin-bottom: 32px;
-    border-bottom: 1px solid #e6eaf0;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 34px 38px;
+    background: linear-gradient(115deg, #17191d 0%, #22252b 72%, #2b211d 100%);
 }
 
-.legacyx-dashboard-topbar p {
-    color: #68717f;
-    font-size: 16px;
+#legacyx-client-portal .legacyx-dashboard-topbar h2 {
+    margin: 0 0 7px !important;
+    color: #fff !important;
+    font-size: clamp(28px, 3vw, 38px) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -.025em;
 }
 
-.legacyx-logout-button {
+#legacyx-client-portal .legacyx-dashboard-topbar p {
+    margin: 0 !important;
+    color: #bfc3ca !important;
+    font-size: 15px !important;
+    line-height: 1.55 !important;
+}
+
+#legacyx-client-portal .legacyx-dashboard-kicker { color: #ff8a22; }
+#legacyx-client-portal .legacyx-dashboard-kicker::before { background: #ff8a22; }
+
+#legacyx-client-portal .legacyx-logout-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 20px;
-    border: 1px solid #d7dce4;
-    border-radius: 10px;
-    color: #252b35;
-    font-weight: 700;
-    white-space: nowrap;
+    min-width: 112px;
+    padding: 12px 19px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px;
+    background: rgba(255,255,255,.06);
+    color: #fff !important;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.2;
+    text-decoration: none !important;
+    transition: .2s ease;
+}
+#legacyx-client-portal .legacyx-logout-button:hover {
+    border-color: var(--lx-orange);
+    background: var(--lx-orange);
 }
 
-.legacyx-dashboard-grid {
+#legacyx-client-portal .legacyx-dashboard-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-}
-
-.legacyx-dashboard-card {
-    position: relative;
-    min-height: 215px;
+    gap: 18px;
     padding: 28px;
-    border: 1px solid #e4e8ee;
-    border-radius: 16px;
-    background: #f9fafc;
+    background: #f8f9fa;
 }
 
-.legacyx-card-number {
-    display: block;
-    margin-bottom: 28px;
-    color: #f15a24;
-    font-size: 12px;
+#legacyx-client-portal .legacyx-dashboard-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 225px;
+    padding: 26px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e7e9ed;
+    border-radius: 17px;
+    box-shadow: 0 8px 22px rgba(25, 29, 36, .035);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+#legacyx-client-portal .legacyx-dashboard-card::after {
+    content: "";
+    position: absolute;
+    right: -32px;
+    bottom: -48px;
+    width: 110px;
+    height: 110px;
+    border: 20px solid rgba(240, 90, 25, .055);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+#legacyx-client-portal .legacyx-dashboard-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(240, 90, 25, .35);
+    box-shadow: 0 15px 34px rgba(25, 29, 36, .08);
+}
+
+#legacyx-client-portal .legacyx-card-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin: 0 0 27px;
+    border-radius: 10px;
+    background: #fff1e9;
+    color: var(--lx-orange);
+    font-size: 11px;
     font-weight: 900;
-    letter-spacing: 0.12em;
+    letter-spacing: .05em;
 }
 
-.legacyx-dashboard-card h3 {
-    margin: 0 0 10px;
-    color: #151b24;
-    font-size: 21px;
+#legacyx-client-portal .legacyx-dashboard-card h3 {
+    margin: 0 0 9px !important;
+    color: #181b20 !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
 }
 
-.legacyx-dashboard-card p {
-    margin: 0 0 18px;
-    color: #67717e;
-    line-height: 1.6;
+#legacyx-client-portal .legacyx-dashboard-card p {
+    margin: 0 0 18px !important;
+    color: var(--lx-muted) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
 }
 
-.legacyx-coming-soon {
-    font-size: 12px;
+#legacyx-client-portal .legacyx-coming-soon,
+#legacyx-client-portal .legacyx-card-link {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: 11px;
     font-weight: 800;
+    letter-spacing: .08em;
+    line-height: 1.4;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8a929d;
 }
 
-@media (max-width: 900px) {
-    .legacyx-dashboard-grid {
-        grid-template-columns: 1fr 1fr;
-    }
+#legacyx-client-portal .legacyx-coming-soon {
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: #f2f3f5;
+    color: #858a92;
 }
 
-@media (max-width: 640px) {
-    .legacyx-portal-hero {
-        padding: 58px 16px 72px;
-    }
+#legacyx-client-portal .legacyx-card-link {
+    color: var(--lx-orange) !important;
+    text-decoration: none !important;
+}
 
-    .legacyx-login-card,
-    .legacyx-dashboard-wrap {
-        padding: 26px 20px;
-        border-radius: 16px;
-    }
+@media (max-width: 980px) {
+    #legacyx-client-portal .legacyx-dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
-    .legacyx-dashboard-topbar {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .legacyx-dashboard-grid {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 680px) {
+    #legacyx-client-portal .legacyx-portal-hero { padding: 48px 16px 70px; }
+    #legacyx-client-portal .legacyx-portal-brand { margin-bottom: 28px; }
+    #legacyx-client-portal .legacyx-login-card { padding: 28px 22px; border-radius: 17px; }
+    #legacyx-client-portal .legacyx-dashboard-wrap { border-radius: 17px; }
+    #legacyx-client-portal .legacyx-dashboard-topbar { align-items: flex-start; flex-direction: column; padding: 28px 22px; }
+    #legacyx-client-portal .legacyx-dashboard-grid { grid-template-columns: 1fr; padding: 16px; }
+    #legacyx-client-portal .legacyx-dashboard-card { min-height: 200px; }
 }
