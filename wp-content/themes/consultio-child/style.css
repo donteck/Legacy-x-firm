@@ -13,3 +13,244 @@ Tags: advisor, attorney, corporate accountant, consulting, consultant, finance, 
 This theme, like WordPress, is licensed under the GPL.
 Use it to make something cool, have fun, and share what you've learned with others.
 */
+
+/* Legacy X Firm Client Portal */
+.legacyx-portal {
+    background: linear-gradient(135deg, #0d1117 0%, #151b24 55%, #222b36 100%);
+    min-height: 760px;
+    color: #ffffff;
+}
+
+.legacyx-portal-hero {
+    padding: 90px 24px 110px;
+}
+
+.legacyx-portal-shell {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.legacyx-portal-brand {
+    max-width: 720px;
+    margin-bottom: 42px;
+}
+
+.legacyx-portal-eyebrow,
+.legacyx-dashboard-kicker {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #f37321;
+}
+
+.legacyx-portal-brand h1 {
+    margin: 0 0 16px;
+    color: #ffffff;
+    font-size: clamp(42px, 6vw, 72px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.legacyx-portal-brand p,
+.legacyx-dashboard-topbar p {
+    margin: 0;
+    color: #c7ced8;
+    font-size: 18px;
+    line-height: 1.7;
+}
+
+.legacyx-login-card,
+.legacyx-dashboard-wrap {
+    background: #ffffff;
+    color: #14181f;
+    border-radius: 22px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
+}
+
+.legacyx-login-card {
+    width: min(520px, 100%);
+    padding: 42px;
+}
+
+.legacyx-card-heading h2,
+.legacyx-dashboard-topbar h2 {
+    margin: 0 0 8px;
+    color: #121821;
+    font-size: 32px;
+}
+
+.legacyx-card-heading p {
+    margin: 0 0 28px;
+    color: #68717f;
+}
+
+#legacyx-loginform p {
+    margin: 0 0 18px;
+}
+
+#legacyx-loginform label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #303845;
+}
+
+#legacyx-loginform input[type="text"],
+#legacyx-loginform input[type="password"] {
+    width: 100%;
+    height: 52px;
+    padding: 0 14px;
+    border: 1px solid #d8dde5;
+    border-radius: 10px;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+
+#legacyx-loginform .login-remember label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+#legacyx-loginform .button-primary {
+    width: 100%;
+    min-height: 52px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #f15a24, #ff8a24);
+    color: #ffffff;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+}
+
+.legacyx-login-links {
+    margin: 6px 0 26px;
+}
+
+.legacyx-login-links a,
+.legacyx-card-link {
+    color: #e85e20;
+    font-weight: 700;
+}
+
+.legacyx-support-note {
+    padding-top: 24px;
+    border-top: 1px solid #e7eaf0;
+    display: grid;
+    gap: 5px;
+    color: #68717f;
+    font-size: 14px;
+}
+
+.legacyx-support-note strong {
+    color: #202733;
+}
+
+.legacyx-dashboard-wrap {
+    padding: 38px;
+}
+
+.legacyx-dashboard-topbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: center;
+    padding-bottom: 32px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid #e6eaf0;
+}
+
+.legacyx-dashboard-topbar p {
+    color: #68717f;
+    font-size: 16px;
+}
+
+.legacyx-logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border: 1px solid #d7dce4;
+    border-radius: 10px;
+    color: #252b35;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.legacyx-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.legacyx-dashboard-card {
+    position: relative;
+    min-height: 215px;
+    padding: 28px;
+    border: 1px solid #e4e8ee;
+    border-radius: 16px;
+    background: #f9fafc;
+}
+
+.legacyx-card-number {
+    display: block;
+    margin-bottom: 28px;
+    color: #f15a24;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+}
+
+.legacyx-dashboard-card h3 {
+    margin: 0 0 10px;
+    color: #151b24;
+    font-size: 21px;
+}
+
+.legacyx-dashboard-card p {
+    margin: 0 0 18px;
+    color: #67717e;
+    line-height: 1.6;
+}
+
+.legacyx-coming-soon {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8a929d;
+}
+
+@media (max-width: 900px) {
+    .legacyx-dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .legacyx-portal-hero {
+        padding: 58px 16px 72px;
+    }
+
+    .legacyx-login-card,
+    .legacyx-dashboard-wrap {
+        padding: 26px 20px;
+        border-radius: 16px;
+    }
+
+    .legacyx-dashboard-topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .legacyx-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
