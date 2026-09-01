@@ -34,3 +34,18 @@ function legacyx_client_portal_template($template)
 }
 
 add_filter('template_include', 'legacyx_client_portal_template', 99);
+
+/**
+ * Add an isolated body class so the Client Portal can override Consultio's
+ * page/content container rules without affecting any other page.
+ */
+function legacyx_client_portal_body_class($classes)
+{
+    if (is_page('client-portal')) {
+        $classes[] = 'legacyx-client-portal-page';
+    }
+
+    return $classes;
+}
+
+add_filter('body_class', 'legacyx_client_portal_body_class');
