@@ -16,3 +16,21 @@ function consultio_enqueue_styles()
 }
 
 add_action('wp_enqueue_scripts', 'consultio_enqueue_styles');
+
+/**
+ * Load the Legacy X Firm Client Portal template for the /client-portal/ page.
+ */
+function legacyx_client_portal_template($template)
+{
+    if (is_page('client-portal')) {
+        $portal_template = get_stylesheet_directory() . '/client-portal.php';
+
+        if (file_exists($portal_template)) {
+            return $portal_template;
+        }
+    }
+
+    return $template;
+}
+
+add_filter('template_include', 'legacyx_client_portal_template', 99);
