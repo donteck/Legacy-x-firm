@@ -1,0 +1,136 @@
+name: Phase 1A Live Source Cleanup V2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/phase1a-live-source-cleanup-v2.yml'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Backup and clean live homepage sources
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" 'bash -s' <<'REMOTE'
+          set -e
+          cd /home/legacyx/web/legacyxfirm.us/public_html
+
+          TS=$(date +%Y%m%d-%H%M%S)
+          BACKUP_DIR="/home/legacyx/backups/legacyxfirm-phase1a-v2-$TS"
+          mkdir -p "$BACKUP_DIR"
+          DB_NAME=$(wp config get DB_NAME --type=constant 2>/dev/null)
+          DB_USER=$(wp config get DB_USER --type=constant 2>/dev/null)
+          DB_PASS=$(wp config get DB_PASSWORD --type=constant 2>/dev/null)
+          DB_HOST=$(wp config get DB_HOST --type=constant 2>/dev/null)
+          MYSQL_PWD="$DB_PASS" mariadb-dump -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" > "$BACKUP_DIR/database.sql"
+          cp -a wp-content/themes/consultio-child "$BACKUP_DIR/consultio-child"
+          echo "Backup created successfully."
+
+          wp eval '
+            global $wpdb;
+            $site = home_url("/");
+            $services = home_url("/#services");
+
+            $items = wp_get_nav_menu_items(43);
+            if ($items) {
+              foreach ($items as $item) {
+                $title = trim(wp_strip_all_tags($item->title));
+                if (strcasecmp($title, "HomeNew") === 0) {
+                  wp_update_post(["ID" => $item->ID, "post_title" => "Home"]);
+                  echo "Renamed HomeNew to Home.\n";
+                }
+              }
+            }
+
+            $footer_id = 20;
+            $repl = [
+              "2024 © All rights reserved by" => "© " . date("Y") . " Legacy X Firm. All rights reserved.",
+              "Merchay.com" => "Legacy X Firm",
+              "merchay.com" => "legacyxfirm.us",
+              "380 St Kilda Road, Melbourne, Australia" => "Boston • Miami • Paris • Worldwide",
+              "Call Us: (210) 123-451 (Sat - Thursday)" => "Call Us: (424) 703-0312",
+              "Monday - Friday (10am - 05 pm)" => "Professional advisory services by appointment",
+              "At vero eos et accusamus et iusto odio digni goikussimos ducimus qui to bonfo blanditiis praese. Ntium voluum deleniti atque." => "Integrated credit, business, financial, tax, grant, and organizational advisory solutions.",
+              "https://demo.casethemes.net" => rtrim($site, "/"),
+              "http://demo.casethemes.net" => rtrim($site, "/")
+            ];
+
+            foreach (["post_content", "post_excerpt"] as $field) {
+              $value = get_post_field($field, $footer_id, "raw");
+              if (is_string($value) && $value !== "") {
+                $new = strtr($value, $repl);
+                if ($new !== $value) wp_update_post(["ID" => $footer_id, $field => $new]);
+              }
+            }
+
+            $edata = get_post_meta($footer_id, "_elementor_data", true);
+            if (is_string($edata) && $edata !== "") {
+              $new = strtr($edata, $repl);
+              if ($new !== $edata) {
+                update_post_meta($footer_id, "_elementor_data", wp_slash($new));
+                echo "Updated live Elementor footer.\n";
+              }
+            }
+
+            foreach (["widget_getintouch_widget", "widget_media_image"] as $opt) {
+              $value = get_option($opt);
+              if ($value !== false) {
+                $serialized = maybe_serialize($value);
+                $new = strtr($serialized, $repl);
+                if ($new !== $serialized) {
+                  update_option($opt, maybe_unserialize($new));
+                  echo "Updated {$opt}.\n";
+                }
+              }
+            }
+
+            $slider_repl = [
+              "+854 325 3218" => "+1 (424) 703-0312",
+              "854 325 3218" => "(424) 703-0312",
+              "https://demo.casethemes.net" => rtrim($services, "/"),
+              "http://demo.casethemes.net" => rtrim($services, "/")
+            ];
+            foreach ([$wpdb->prefix."revslider_sliders", $wpdb->prefix."revslider_slides", $wpdb->prefix."revslider_static_slides"] as $table) {
+              if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table)) !== $table) continue;
+              foreach ($wpdb->get_results("SHOW COLUMNS FROM `{$table}`") as $c) {
+                $type = strtolower($c->Type);
+                if (strpos($type,"char")===false && strpos($type,"text")===false && strpos($type,"blob")===false && strpos($type,"json")===false) continue;
+                $col = $c->Field;
+                foreach ($slider_repl as $from=>$to) {
+                  $count = $wpdb->query($wpdb->prepare("UPDATE `{$table}` SET `{$col}`=REPLACE(`{$col}`,%s,%s) WHERE `{$col}` LIKE %s", $from, $to, "%".$wpdb->esc_like($from)."%"));
+                  if ($count) echo "Updated {$table}.{$col}: {$count} row(s).\n";
+                }
+              }
+            }
+            clean_post_cache($footer_id);
+            wp_cache_flush();
+          '
+
+          wp elementor flush_css 2>/dev/null || true
+          echo '=== VERIFY ==='
+          wp eval '
+            global $wpdb;
+            $items=wp_get_nav_menu_items(43);
+            if($items) foreach($items as $i) echo "MENU {$i->ID} | {$i->title} | {$i->url}\n";
+            $footer=(string)get_post_meta(20,"_elementor_data",true);
+            foreach(["demo.casethemes.net","merchay.com","380 St Kilda","(210) 123-451"] as $n) echo "FOOTER {$n}: ".(stripos($footer,$n)===false?"clean":"still-present")."\n";
+            foreach([$wpdb->prefix."revslider_sliders",$wpdb->prefix."revslider_slides",$wpdb->prefix."revslider_static_slides"] as $t){
+              if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$t))!==$t) continue;
+              foreach($wpdb->get_results("SHOW COLUMNS FROM `{$t}`") as $c){
+                $type=strtolower($c->Type); if(strpos($type,"char")===false&&strpos($type,"text")===false&&strpos($type,"blob")===false&&strpos($type,"json")===false) continue;
+                $col=$c->Field; $n=$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM `{$t}` WHERE `{$col}` LIKE %s","%854 325 3218%")); if($n) echo "OLD PHONE {$t}.{$col}: {$n}\n";
+              }
+            }
+          '
+          echo '=== COMPLETE ==='
+          REMOTE
