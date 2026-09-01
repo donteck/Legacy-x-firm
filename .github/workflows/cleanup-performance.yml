@@ -25,9 +25,10 @@ jobs:
             "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
             "set -e; cd '${{ secrets.DEPLOY_PATH }}'; \
              echo '=== DEACTIVATE NONESSENTIAL ACTIVE PLUGINS ==='; \
-             wp plugin deactivate duplicate-page massive-cryptocurrency-widgets meks-simple-flickr-widget || true; \
-             echo '=== REMOVE CLEARLY UNUSED INACTIVE PLUGINS ==='; \
-             wp plugin delete akismet hello case-theme-import wpforms-lite || true; \
+             wp plugin deactivate duplicate-page massive-cryptocurrency-widgets meks-simple-flickr-widget backup instagram-feed optinmonster wpforms || true; \
+             echo '=== REMOVE CLEARLY UNUSED INACTIVE PLUGIN FILES ==='; \
+             rm -rf wp-content/plugins/akismet wp-content/plugins/case-theme-import wp-content/plugins/duplicate-page wp-content/plugins/massive-cryptocurrency-widgets wp-content/plugins/meks-simple-flickr-widget wp-content/plugins/wpforms-lite; \
+             rm -f wp-content/plugins/hello.php; \
              echo '=== DISABLE BROKEN OLD ENDURANCE HOST CACHE ==='; \
              if [ -f wp-content/mu-plugins/endurance-page-cache.php ]; then mv wp-content/mu-plugins/endurance-page-cache.php wp-content/mu-plugins/endurance-page-cache.php.disabled; fi; \
              echo '=== CLEAR EXPIRED TRANSIENTS ==='; \
