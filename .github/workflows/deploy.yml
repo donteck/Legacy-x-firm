@@ -1,0 +1,58 @@
+name: Deploy Legacy X Firm to Hestia
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "wp-content/themes/consultio-child/**"
+      - ".github/workflows/deploy.yml"
+
+  workflow_dispatch:
+
+concurrency:
+  group: legacy-x-firm-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan \
+            -p "${{ secrets.HESTIA_PORT }}" \
+            -H "${{ secrets.HESTIA_HOST }}" \
+            >> ~/.ssh/known_hosts
+
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify Hestia connection
+        run: |
+          ssh \
+            -i ~/.ssh/id_ed25519 \
+            -p "${{ secrets.HESTIA_PORT }}" \
+            -o BatchMode=yes \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" \
+            "test -d '${{ secrets.DEPLOY_PATH }}/wp-content/themes/consultio-child'"
+
+      - name: Deploy Legacy X Firm child theme
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.HESTIA_PORT }} -o BatchMode=yes" \
+            wp-content/themes/consultio-child/ \
+            "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}:${{ secrets.DEPLOY_PATH }}/wp-content/themes/consultio-child/"
+
+      - name: Deployment complete
+        run: |
+          echo "Legacy X Firm deployed successfully to Hestia."
