@@ -1,0 +1,16 @@
+name: Audit Frontend Asset Handles
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/audit-asset-handles.yml"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect homepage plugin asset tags
+        run: |
+          curl -Lks --max-time 20 https://legacyxfirm.us/ | tr '>' '>\n' | grep -Ei 'wp-content/plugins/(instagram-feed|contact-form-7|contact-form-7-multi-step|woocommerce|yith-woocommerce-quick-view|yith-woocommerce-wishlist|optinmonster|wpforms)' || true
