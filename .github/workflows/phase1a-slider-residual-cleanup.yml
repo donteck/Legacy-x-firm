@@ -1,0 +1,76 @@
+name: Phase 1A Slider Residual Cleanup
+
+on:
+  push:
+    paths:
+      - '.github/workflows/phase1a-slider-residual-cleanup.yml'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+      - name: Backup and clean active Revolution Slider
+        shell: bash
+        run: |
+          ssh -p "${{ secrets.HESTIA_PORT }}" "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" 'bash -s' <<'REMOTE'
+          set -e
+          cd /home/legacyx/web/legacyxfirm.us/public_html
+          TS=$(date +%Y%m%d-%H%M%S)
+          BACKUP_DIR="/home/legacyx/backups/legacyxfirm-slider-cleanup-$TS"
+          mkdir -p "$BACKUP_DIR"
+          DB_NAME=$(wp config get DB_NAME --type=constant 2>/dev/null)
+          DB_USER=$(wp config get DB_USER --type=constant 2>/dev/null)
+          DB_PASS=$(wp config get DB_PASSWORD --type=constant 2>/dev/null)
+          DB_HOST=$(wp config get DB_HOST --type=constant 2>/dev/null)
+          MYSQL_PWD="$DB_PASS" mariadb-dump -h "$DB_HOST" -u "$DB_USER" "$DB_NAME" > "$BACKUP_DIR/database.sql"
+          echo 'Backup created successfully.'
+
+          wp eval '
+            global $wpdb;
+            $tables=[
+              $wpdb->prefix."revslider_slides",
+              $wpdb->prefix."revslider_slides7",
+              $wpdb->prefix."revslider_sliders",
+              $wpdb->prefix."revslider_sliders7",
+              $wpdb->prefix."revslider_static_slides"
+            ];
+            $replacements=[
+              "+854 325 3218"=>"(424) 703-0312",
+              "+8543253218"=>"+14247030312",
+              "854 325 3218"=>"(424) 703-0312",
+              "https:\\/\\/demo.casethemes.net\\/consultio-business2\\/services-v-1\\/"=>"#section-services",
+              "http:\\/\\/demo.casethemes.net\\/consultio-business2\\/services-v-1\\/"=>"#section-services",
+              "https://demo.casethemes.net/consultio-business2/services-v-1/"=>"#section-services",
+              "http://demo.casethemes.net/consultio-business2/services-v-1/"=>"#section-services"
+            ];
+            foreach($tables as $table){
+              if($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s",$table))!==$table) continue;
+              foreach($wpdb->get_results("SHOW COLUMNS FROM `{$table}`") as $c){
+                $type=strtolower($c->Type);
+                if(strpos($type,"char")===false&&strpos($type,"text")===false&&strpos($type,"blob")===false&&strpos($type,"json")===false) continue;
+                $col=$c->Field;
+                foreach($replacements as $from=>$to){
+                  $count=$wpdb->query($wpdb->prepare("UPDATE `{$table}` SET `{$col}`=REPLACE(`{$col}`,%s,%s) WHERE `{$col}` LIKE %s",$from,$to,"%".$wpdb->esc_like($from)."%"));
+                  if($count) echo "Updated {$table}.{$col}: {$count} row(s).\n";
+                }
+              }
+            }
+            wp_cache_flush();
+          '
+
+          echo '=== UNCACHED LIVE VERIFY ==='
+          curl -L -sS -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "https://legacyxfirm.us/?slider_verify=$(date +%s)" -o /tmp/home.html
+          for marker in '+854 325 3218' 'href="tel:+8543253218"' 'demo.casethemes.net/consultio-business2/services-v-1/'; do
+            if grep -Fqi "$marker" /tmp/home.html; then echo "PRESENT: $marker"; else echo "CLEAN: $marker"; fi
+          done
+          if grep -Fqi '(424) 703-0312' /tmp/home.html || grep -Fqi '4247030312' /tmp/home.html; then echo 'PRESENT: Legacy X Firm phone'; else echo 'MISSING: Legacy X Firm phone'; fi
+          echo '=== COMPLETE ==='
+          REMOTE
