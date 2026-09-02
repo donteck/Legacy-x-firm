@@ -11,7 +11,9 @@ add_action('after_setup_theme','legacyx_theme_setup');
 
 function legacyx_enqueue_assets() {
     $css = get_stylesheet_directory() . '/style.css';
+    $polish = get_stylesheet_directory() . '/assets/css/polish.css';
     wp_enqueue_style('legacyx-style', get_stylesheet_uri(), array(), file_exists($css) ? filemtime($css) : '1.0.0');
+    wp_enqueue_style('legacyx-polish', get_stylesheet_directory_uri() . '/assets/css/polish.css', array('legacyx-style'), file_exists($polish) ? filemtime($polish) : '1.0.0');
 }
 add_action('wp_enqueue_scripts','legacyx_enqueue_assets');
 
