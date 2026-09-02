@@ -19,6 +19,7 @@
       <a href="<?php echo esc_url(home_url('/#who')); ?>">Who We Serve</a>
       <a href="<?php echo esc_url(home_url('/#process')); ?>">Process</a>
       <a href="<?php echo esc_url(home_url('/#os')); ?>">Firm OS</a>
+      <a href="<?php echo esc_url(home_url('/executive-assessment/')); ?>">Start Here</a>
       <a class="lx-portal-link" href="<?php echo esc_url(home_url('/client-portal/')); ?>">Client Portal</a>
     </nav>
     <button class="lx-menu" type="button" aria-label="Open navigation" aria-controls="lx-nav" aria-expanded="false">☰</button>
