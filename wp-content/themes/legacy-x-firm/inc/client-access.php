@@ -1,0 +1,58 @@
+<?php
+if(!defined('ABSPATH'))exit;
+
+function legacyx_register_client_role(){
+    if(!get_role('legacyx_client')) add_role('legacyx_client','Legacy X Client',array('read'=>true));
+}
+add_action('init','legacyx_register_client_role',5);
+
+function legacyx_client_login_redirect($redirect_to,$requested,$user){
+    if($user instanceof WP_User && in_array('legacyx_client',(array)$user->roles,true)) return home_url('/client-portal/');
+    return $redirect_to;
+}
+add_filter('login_redirect','legacyx_client_login_redirect',10,3);
+
+function legacyx_block_client_admin(){
+    if(!is_user_logged_in()||wp_doing_ajax())return;
+    $user=wp_get_current_user();
+    if(in_array('legacyx_client',(array)$user->roles,true)) wp_safe_redirect(home_url('/client-portal/'));
+}
+add_action('admin_init','legacyx_block_client_admin');
+
+function legacyx_hide_admin_bar_for_clients($show){
+    if(!is_user_logged_in())return $show;
+    $user=wp_get_current_user();
+    return in_array('legacyx_client',(array)$user->roles,true)?false:$show;
+}
+add_filter('show_admin_bar','legacyx_hide_admin_bar_for_clients');
+
+function legacyx_client_account_metabox(){add_meta_box('legacyx_client_account','Client Portal Account','legacyx_render_client_account_box','legacyx_client','side','high');}
+add_action('add_meta_boxes','legacyx_client_account_metabox');
+
+function legacyx_render_client_account_box($post){
+    $uid=absint(get_post_meta($post->ID,'_legacyx_wp_user_id',true));
+    $email=sanitize_email(get_post_meta($post->ID,'_legacyx_email',true));
+    if($uid){$user=get_userdata($uid);echo '<p><strong>Connected:</strong><br>'.esc_html($user?$user->user_login:'User #'.$uid).'</p><p><strong>Email:</strong><br>'.esc_html($user?$user->user_email:$email).'</p>';return;}
+    if(!$email){echo '<p>Add and save the client email first. Then return here to create the portal account.</p>';return;}
+    wp_nonce_field('legacyx_create_client_account_'.$post->ID,'legacyx_client_account_nonce');
+    echo '<p>No portal account is connected.</p><p><button type="submit" class="button button-primary" name="legacyx_create_client_account" value="1">Create Client Test Account</button></p><p><small>Creates a Legacy X Client user, links it to this profile, and emails a password-set link to the client email.</small></p>';
+}
+
+function legacyx_create_client_account_from_profile($post_id){
+    if(get_post_type($post_id)!=='legacyx_client'||empty($_POST['legacyx_create_client_account']))return;
+    if(!current_user_can('edit_post',$post_id)||!isset($_POST['legacyx_client_account_nonce'])||!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['legacyx_client_account_nonce'])),'legacyx_create_client_account_'.$post_id))return;
+    if(absint(get_post_meta($post_id,'_legacyx_wp_user_id',true)))return;
+    $email=sanitize_email(get_post_meta($post_id,'_legacyx_email',true));if(!$email||!is_email($email))return;
+    $existing=get_user_by('email',$email);
+    if($existing){
+        if(in_array('administrator',(array)$existing->roles,true))return;
+        $uid=$existing->ID;$existing->set_role('legacyx_client');
+    }else{
+        $base=sanitize_user(strtolower(strstr($email,'@',true)),true);if(!$base)$base='legacyxclient';$login=$base;$i=1;while(username_exists($login)){$login=$base.$i;$i++;}
+        $uid=wp_create_user($login,wp_generate_password(32,true,true),$email);if(is_wp_error($uid))return;
+        $user=new WP_User($uid);$user->set_role('legacyx_client');
+        wp_new_user_notification($uid,null,'user');
+    }
+    update_post_meta($post_id,'_legacyx_wp_user_id',absint($uid));
+}
+add_action('save_post_legacyx_client','legacyx_create_client_account_from_profile',20);
