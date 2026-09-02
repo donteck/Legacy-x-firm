@@ -20,6 +20,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Validate PHP syntax
+        run: |
+          set -e
+          find wp-content/themes/legacy-x-firm -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
