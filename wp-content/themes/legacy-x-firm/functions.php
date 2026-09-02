@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
+require_once get_theme_file_path('/inc/client-profile.php');
+
 function legacyx_theme_setup() {
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');
@@ -129,12 +131,41 @@ function legacyx_submit_assessment() {
         'submitted_at' => current_time('mysql')
     );
 
-    foreach ($fields as $key => $value) {
-        update_post_meta($assessment_id, '_legacyx_' . $key, $value);
+    foreach ($fields as $key => $value) update_post_meta($assessment_id, '_legacyx_' . $key, $value);
+
+    $name_parts = preg_split('/\s+/', trim($full_name), 2);
+    $first_name = isset($name_parts[0]) ? $name_parts[0] : '';
+    $last_name = isset($name_parts[1]) ? $name_parts[1] : '';
+
+    $client_id = wp_insert_post(array(
+        'post_type' => 'legacyx_client',
+        'post_status' => 'publish',
+        'post_title' => $full_name . ($fields['business_name'] ? ' — ' . $fields['business_name'] : '')
+    ));
+
+    if (!is_wp_error($client_id) && $client_id) {
+        $client_meta = array(
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+            'email' => $email,
+            'phone' => $fields['phone'],
+            'business_name' => $fields['business_name'],
+            'annual_revenue' => $fields['revenue'],
+            'capital_goal' => $fields['capital_need'],
+            'status' => 'Assessment',
+            'service_level' => $fields['engagement'],
+            'source' => $fields['source'] ?: 'Executive Assessment',
+            'assessment_id' => $assessment_id,
+            'ownership_notes' => 'Primary role: ' . $fields['role'] . "\nBusiness stage: " . $fields['business_stage'],
+            'financial_notes' => 'Primary objective: ' . $objective . "\nCurrent obstacle: " . $fields['obstacle'] . "\nTimeline: " . $timeline . "\nPriorities: " . implode(', ', $fields['priorities'])
+        );
+        foreach ($client_meta as $key => $value) update_post_meta($client_id, '_legacyx_' . $key, $value);
+        update_post_meta($client_id, '_legacyx_client_id', legacyx_client_id($client_id));
+        update_post_meta($assessment_id, '_legacyx_client_profile_id', $client_id);
     }
 
     $subject = 'New Legacy X Firm Executive Assessment — ' . $full_name;
-    $message = "A new Executive Assessment has been submitted.\n\nName: {$full_name}\nEmail: {$email}\nTimeline: {$timeline}\n\nReview it inside WordPress Admin > Assessments.";
+    $message = "A new Executive Assessment has been submitted.\n\nName: {$full_name}\nEmail: {$email}\nTimeline: {$timeline}\n\nReview it inside WordPress Admin > Assessments. A Universal Client Profile has also been created.";
     wp_mail(get_option('admin_email'), $subject, $message);
 
     wp_safe_redirect(add_query_arg('submitted', '1', home_url('/executive-assessment/')));
@@ -180,6 +211,8 @@ function legacyx_render_assessment_details($post) {
         if (is_array($value)) $value = implode(', ',$value);
         echo '<div style="padding:10px 12px;font-weight:700;background:#f6f6f6;border-bottom:1px solid #ddd">'.esc_html($label).'</div><div style="padding:10px 12px;border-bottom:1px solid #ddd">'.nl2br(esc_html($value)).'</div>';
     }
+    $client_profile_id = absint(get_post_meta($post->ID, '_legacyx_client_profile_id', true));
+    if ($client_profile_id) echo '<div style="padding:10px 12px;font-weight:700;background:#f6f6f6">Client Profile</div><div style="padding:10px 12px"><a href="'.esc_url(get_edit_post_link($client_profile_id)).'">Open Universal Client Profile</a></div>';
     echo '</div>';
 }
 
