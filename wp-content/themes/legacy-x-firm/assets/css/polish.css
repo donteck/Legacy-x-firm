@@ -1,0 +1,61 @@
+/* Legacy X Firm — visual polish layer */
+
+/* Header balance */
+.lx-header{height:82px;background:rgba(255,253,250,.96);border-bottom:1px solid rgba(16,16,15,.08)}
+.lx-nav{min-height:82px;align-items:center}
+.lx-brand-logo{height:64px;max-width:178px;display:flex;align-items:center;overflow:visible;flex:0 0 auto}
+.lx-logo{height:58px;width:auto;max-width:174px;object-fit:contain;object-position:left center}
+.lx-links{margin-left:auto;gap:28px;align-items:center}
+.lx-links a{display:flex;align-items:center;height:82px;padding:0;border-bottom:2px solid transparent;white-space:nowrap}
+.lx-portal-link{height:auto!important;min-height:46px;padding:0 21px!important;border:1px solid rgba(16,16,15,.68)!important}
+
+/* Hero composition */
+.hero-grid{align-items:stretch}
+.hero-grid>div:first-child{display:flex;flex-direction:column;justify-content:center;padding:20px 0}
+.hero-art{display:flex;align-items:center;justify-content:center;min-height:590px}
+.hero-logo{top:43%!important;width:min(64%,390px)!important;max-width:390px!important;max-height:270px!important;object-fit:contain!important;filter:drop-shadow(0 20px 28px rgba(0,0,0,.38))!important}
+.plinth{left:12%;right:12%;bottom:12%;height:104px;border-radius:2px}
+.art-label{left:0;right:0;bottom:30px;text-align:center;letter-spacing:.25em}
+
+/* Footer branding */
+.lx-footer{padding-top:62px}
+.foot{align-items:start}
+.foot>div:first-child{max-width:320px}
+.lx-footer-logo-link{display:inline-flex;align-items:center;min-height:88px;margin:0 0 16px}
+.lx-footer-logo{width:210px;max-height:84px;object-fit:contain;object-position:left center}
+.foot h4{margin-top:12px;margin-bottom:15px}
+.foot p{margin-top:0}
+.copyright{align-items:center}
+
+/* Tablet */
+@media(max-width:1050px){
+  .lx-links{gap:19px;font-size:11px}
+  .lx-brand-logo{max-width:160px}
+  .lx-logo{max-width:155px;height:54px}
+}
+
+@media(max-width:900px){
+  .lx-header,.lx-nav{height:72px;min-height:72px}
+  .lx-brand-logo{height:58px;max-width:155px}
+  .lx-logo{height:52px;max-width:150px}
+  .lx-links{top:72px;margin-left:0}
+  .lx-links a{height:auto;padding:15px 14px}
+  .lx-portal-link{min-height:48px;margin-top:8px;justify-content:center}
+  .hero-grid{align-items:center}
+  .hero-art{min-height:480px}
+  .hero-logo{width:min(58%,330px)!important;max-width:330px!important}
+  .foot>div:first-child{max-width:none}
+}
+
+/* Mobile */
+@media(max-width:560px){
+  .lx-brand-logo{height:54px;max-width:138px}
+  .lx-logo{height:48px;max-width:134px}
+  .hero-art{min-height:390px}
+  .hero-logo{top:41%!important;width:min(70%,260px)!important;max-width:260px!important;max-height:190px!important}
+  .plinth{left:9%;right:9%;height:82px;bottom:13%}
+  .art-label{font-size:9px;bottom:24px;letter-spacing:.18em}
+  .lx-footer{padding-top:52px}
+  .lx-footer-logo-link{min-height:72px}
+  .lx-footer-logo{width:180px;max-height:72px}
+}
