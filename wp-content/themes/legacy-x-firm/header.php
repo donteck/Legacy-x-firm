@@ -9,7 +9,9 @@
 <?php wp_body_open(); ?>
 <header class="lx-header">
   <div class="wrap lx-nav">
-    <a class="lx-brand" href="<?php echo esc_url(home_url('/')); ?>"><span class="lx-mark">X</span><span>LEGACY X FIRM</span></a>
+    <a class="lx-brand lx-brand-logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="Legacy X Firm home">
+      <img class="lx-logo" src="<?php echo esc_url(home_url('/wp-content/uploads/2025/05/ChatGPT-Image-May-3-2025-04_45_08-PM-1.png')); ?>" alt="Legacy X Firm" width="190" height="64" decoding="async">
+    </a>
     <nav class="lx-links" id="lx-nav" aria-label="Primary navigation">
       <a href="<?php echo esc_url(home_url('/#home')); ?>">Home</a>
       <a href="<?php echo esc_url(home_url('/#advisory')); ?>">Advisory</a>
