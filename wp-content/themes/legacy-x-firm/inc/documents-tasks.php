@@ -1,5 +1,6 @@
 <?php
 if(!defined('ABSPATH'))exit;
+require_once get_theme_file_path('/inc/applications.php');
 
 function legacyx_register_workflow_items(){
  register_post_type('legacyx_work_item',array(
@@ -39,3 +40,6 @@ function legacyx_get_client_workflow($client_id){
 }
 
 function legacyx_workflow_counts($client_id){$items=legacyx_get_client_workflow($client_id);$out=array('open'=>0,'documents'=>0,'completed'=>0);foreach($items as $item){$s=get_post_meta($item->ID,'_legacyx_work_status',true);$t=get_post_meta($item->ID,'_legacyx_work_type',true);if($s==='Completed')$out['completed']++;else if($s!=='Archived')$out['open']++;if(strpos($t,'Document')!==false&&$s!=='Archived')$out['documents']++;}return $out;}
+
+function legacyx_applications_template_router($template){if(is_page('applications-center')){$f=get_theme_file_path('/applications-center.php');if(file_exists($f))return $f;}return $template;}add_filter('template_include','legacyx_applications_template_router',100);
+function legacyx_ensure_applications_page(){if(!get_page_by_path('applications-center'))wp_insert_post(array('post_title'=>'Applications Center','post_name'=>'applications-center','post_status'=>'publish','post_type'=>'page','post_content'=>''));}add_action('init','legacyx_ensure_applications_page',25);
