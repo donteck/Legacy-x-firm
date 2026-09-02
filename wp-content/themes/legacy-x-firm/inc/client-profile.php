@@ -1,0 +1,159 @@
+<?php
+if (!defined('ABSPATH')) { exit; }
+
+function legacyx_register_client_profile() {
+    register_post_type('legacyx_client', array(
+        'labels' => array(
+            'name' => 'Clients',
+            'singular_name' => 'Client',
+            'add_new_item' => 'Add Client',
+            'edit_item' => 'Edit Client Profile',
+            'menu_name' => 'Clients'
+        ),
+        'public' => false,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'menu_icon' => 'dashicons-id-alt',
+        'supports' => array('title'),
+        'capability_type' => 'post',
+        'map_meta_cap' => true,
+        'show_in_rest' => false
+    ));
+}
+add_action('init', 'legacyx_register_client_profile');
+
+function legacyx_client_id($post_id) {
+    $existing = get_post_meta($post_id, '_legacyx_client_id', true);
+    if ($existing) return $existing;
+    return 'LXF-' . str_pad((string)$post_id, 6, '0', STR_PAD_LEFT);
+}
+
+function legacyx_client_profile_metaboxes() {
+    add_meta_box('legacyx_client_identity', 'Identity & Contact', 'legacyx_client_identity_box', 'legacyx_client', 'normal', 'high');
+    add_meta_box('legacyx_client_business', 'Business & Ownership', 'legacyx_client_business_box', 'legacyx_client', 'normal', 'default');
+    add_meta_box('legacyx_client_financial', 'Credit & Financial Profile', 'legacyx_client_financial_box', 'legacyx_client', 'normal', 'default');
+    add_meta_box('legacyx_client_relationship', 'Legacy X Relationship', 'legacyx_client_relationship_box', 'legacyx_client', 'side', 'high');
+}
+add_action('add_meta_boxes', 'legacyx_client_profile_metaboxes');
+
+function legacyx_client_field($post, $key, $label, $type = 'text', $options = array()) {
+    $value = get_post_meta($post->ID, '_legacyx_' . $key, true);
+    echo '<p><label style="display:block;font-weight:600;margin-bottom:6px" for="legacyx_' . esc_attr($key) . '">' . esc_html($label) . '</label>';
+    if ($type === 'textarea') {
+        echo '<textarea style="width:100%;min-height:90px" id="legacyx_' . esc_attr($key) . '" name="legacyx_' . esc_attr($key) . '">' . esc_textarea($value) . '</textarea>';
+    } elseif ($type === 'select') {
+        echo '<select style="width:100%" id="legacyx_' . esc_attr($key) . '" name="legacyx_' . esc_attr($key) . '"><option value="">Select</option>';
+        foreach ($options as $option) echo '<option value="' . esc_attr($option) . '" ' . selected($value, $option, false) . '>' . esc_html($option) . '</option>';
+        echo '</select>';
+    } else {
+        echo '<input style="width:100%" type="' . esc_attr($type) . '" id="legacyx_' . esc_attr($key) . '" name="legacyx_' . esc_attr($key) . '" value="' . esc_attr($value) . '">';
+    }
+    echo '</p>';
+}
+
+function legacyx_client_identity_box($post) {
+    wp_nonce_field('legacyx_save_client_profile', 'legacyx_client_nonce');
+    echo '<p><strong>Client ID:</strong> ' . esc_html(legacyx_client_id($post->ID)) . '</p>';
+    echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+    legacyx_client_field($post, 'first_name', 'First Name');
+    legacyx_client_field($post, 'last_name', 'Last Name');
+    legacyx_client_field($post, 'email', 'Email', 'email');
+    legacyx_client_field($post, 'phone', 'Phone', 'tel');
+    legacyx_client_field($post, 'city', 'City');
+    legacyx_client_field($post, 'state', 'State / Region');
+    echo '</div>';
+    legacyx_client_field($post, 'address', 'Mailing Address');
+}
+
+function legacyx_client_business_box($post) {
+    echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+    legacyx_client_field($post, 'business_name', 'Primary Business');
+    legacyx_client_field($post, 'entity_type', 'Entity Type', 'select', array('Sole Proprietorship','LLC','Corporation','Partnership','Nonprofit','Trust / Family Enterprise','Other'));
+    legacyx_client_field($post, 'industry', 'Industry');
+    legacyx_client_field($post, 'years_in_business', 'Years in Business');
+    legacyx_client_field($post, 'annual_revenue', 'Approx. Annual Revenue');
+    legacyx_client_field($post, 'employees', 'Employees');
+    echo '</div>';
+    legacyx_client_field($post, 'ownership_notes', 'Ownership / Entity Notes', 'textarea');
+}
+
+function legacyx_client_financial_box($post) {
+    echo '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+    legacyx_client_field($post, 'personal_credit_range', 'Personal Credit Range', 'select', array('Below 580','580–619','620–659','660–699','700–739','740+','Unknown / Not Provided'));
+    legacyx_client_field($post, 'business_credit_status', 'Business Credit Status', 'select', array('Not Established','Building','Established','Strong','Unknown / Not Provided'));
+    legacyx_client_field($post, 'capital_goal', 'Capital Goal');
+    legacyx_client_field($post, 'cashflow_status', 'Cash Flow Status', 'select', array('Needs Attention','Stable','Growing','Strong','Not Reviewed'));
+    echo '</div>';
+    legacyx_client_field($post, 'financial_notes', 'Financial / Credit Notes', 'textarea');
+}
+
+function legacyx_client_relationship_box($post) {
+    legacyx_client_field($post, 'status', 'Client Status', 'select', array('Lead','Assessment','Qualified','Onboarding','Active','Paused','Completed','Archived'));
+    legacyx_client_field($post, 'relationship_owner', 'Relationship Owner');
+    legacyx_client_field($post, 'service_level', 'Service Level', 'select', array('Self-Service','Guided','Done-for-You','Private Advisory','Enterprise'));
+    legacyx_client_field($post, 'source', 'Source');
+    legacyx_client_field($post, 'wp_user_id', 'Linked WP User ID', 'number');
+    legacyx_client_field($post, 'assessment_id', 'Assessment Record ID', 'number');
+}
+
+function legacyx_save_client_profile($post_id) {
+    if (get_post_type($post_id) !== 'legacyx_client') return;
+    if (!isset($_POST['legacyx_client_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['legacyx_client_nonce'])), 'legacyx_save_client_profile')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    $fields = array('first_name','last_name','email','phone','city','state','address','business_name','entity_type','industry','years_in_business','annual_revenue','employees','ownership_notes','personal_credit_range','business_credit_status','capital_goal','cashflow_status','financial_notes','status','relationship_owner','service_level','source','wp_user_id','assessment_id');
+    foreach ($fields as $field) {
+        if (!isset($_POST['legacyx_' . $field])) continue;
+        $raw = wp_unslash($_POST['legacyx_' . $field]);
+        $value = in_array($field, array('ownership_notes','financial_notes'), true) ? sanitize_textarea_field($raw) : sanitize_text_field($raw);
+        if ($field === 'email') $value = sanitize_email($raw);
+        update_post_meta($post_id, '_legacyx_' . $field, $value);
+    }
+
+    if (!get_post_meta($post_id, '_legacyx_client_id', true)) update_post_meta($post_id, '_legacyx_client_id', legacyx_client_id($post_id));
+
+    $first = get_post_meta($post_id, '_legacyx_first_name', true);
+    $last = get_post_meta($post_id, '_legacyx_last_name', true);
+    $business = get_post_meta($post_id, '_legacyx_business_name', true);
+    $title = trim($first . ' ' . $last);
+    if ($business) $title .= ($title ? ' — ' : '') . $business;
+    if ($title && get_post_field('post_title', $post_id) !== $title) {
+        remove_action('save_post_legacyx_client', 'legacyx_save_client_profile');
+        wp_update_post(array('ID' => $post_id, 'post_title' => $title));
+        add_action('save_post_legacyx_client', 'legacyx_save_client_profile');
+    }
+}
+add_action('save_post_legacyx_client', 'legacyx_save_client_profile');
+
+function legacyx_client_columns($columns) {
+    return array(
+        'cb' => $columns['cb'],
+        'title' => 'Client',
+        'client_id' => 'Client ID',
+        'status' => 'Status',
+        'business' => 'Business',
+        'email' => 'Email',
+        'date' => 'Created'
+    );
+}
+add_filter('manage_legacyx_client_posts_columns', 'legacyx_client_columns');
+
+function legacyx_client_column_content($column, $post_id) {
+    if ($column === 'client_id') echo esc_html(get_post_meta($post_id, '_legacyx_client_id', true));
+    if ($column === 'status') echo esc_html(get_post_meta($post_id, '_legacyx_status', true));
+    if ($column === 'business') echo esc_html(get_post_meta($post_id, '_legacyx_business_name', true));
+    if ($column === 'email') echo esc_html(get_post_meta($post_id, '_legacyx_email', true));
+}
+add_action('manage_legacyx_client_posts_custom_column', 'legacyx_client_column_content', 10, 2);
+
+function legacyx_find_client_by_wp_user($user_id) {
+    $clients = get_posts(array(
+        'post_type' => 'legacyx_client',
+        'post_status' => 'publish',
+        'numberposts' => 1,
+        'meta_key' => '_legacyx_wp_user_id',
+        'meta_value' => (string) absint($user_id)
+    ));
+    return $clients ? $clients[0] : null;
+}
