@@ -1,0 +1,42 @@
+name: Verify Legacy X Firm V2.4 Homepage
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - ".github/workflows/verify-v24-homepage.yml"
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HESTIA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.HESTIA_PORT }}" -H "${{ secrets.HESTIA_HOST }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify production homepage
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "${{ secrets.HESTIA_PORT }}" -o BatchMode=yes "${{ secrets.HESTIA_USER }}@${{ secrets.HESTIA_HOST }}" 'bash -s' <<'REMOTE'
+          set -e
+          cd "${{ secrets.DEPLOY_PATH }}"
+          echo "=== ACTIVE THEME ==="
+          wp theme list --status=active --fields=name,status,version 2>/dev/null || true
+          echo "=== FRONT PAGE FILE ==="
+          test -f wp-content/themes/consultio-child/front-page.php && echo "front-page.php: PRESENT"
+          grep -q "V2.4 Executive Luxury Homepage" wp-content/themes/consultio-child/front-page.php && echo "V2.4 marker: PRESENT"
+          echo "=== PAYLOAD PARTS ==="
+          find wp-content/themes/consultio-child/home-v24-payload -maxdepth 1 -type f -name 'part*.txt' | sort | wc -l
+          echo "=== WP CACHE ==="
+          wp cache flush 2>/dev/null || true
+          echo "=== LOCAL HTTPS RESPONSE ==="
+          HTML=$(curl -ksSL --resolve legacyxfirm.us:443:127.0.0.1 "https://legacyxfirm.us/?legacyx_verify=$(date +%s)" || true)
+          if printf '%s' "$HTML" | grep -q "WE BUILD."; then echo "NEW_HOMEPAGE_MARKER=YES"; else echo "NEW_HOMEPAGE_MARKER=NO"; fi
+          if printf '%s' "$HTML" | grep -q "HomeNew"; then echo "OLD_HOMEPAGE_MARKER=YES"; else echo "OLD_HOMEPAGE_MARKER=NO"; fi
+          echo "Response bytes: ${#HTML}"
+          REMOTE
